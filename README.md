@@ -17,7 +17,7 @@
 - TOKEN — это строковая переменная, куда вы должны поместить токен вашего бота, полученный от @BotFather в Telegram.
 - bot = telebot.TeleBot(TOKEN) создает экземпляр бота для взаимодействия с Telegram.
 - TOKEN = os.environ.get("TOKEN") Закрепляет конфигурацию токена в PyCharm, как указано на рисунке.
-![Uploading 1.png…]()
+![Uploading 1.png…](https://github.com/SergeyTsVL/Telegramm_Bot/blob/3.2/images/1.png)
 
 Хранение состояний пользователей
 - user_states используется для отслеживания действий или состояний пользователей. Например, какое изображение было отправлено.

@@ -85,8 +85,8 @@ def get_options_keyboard():
     ascii_btn = types.InlineKeyboardButton("ASCII Art", callback_data="ascii")
     invert_btn = types.InlineKeyboardButton("Invert colors", callback_data="invert")
     reflected_btn = types.InlineKeyboardButton("Reflected image", callback_data="reflected")
-    # print(ascii_btn) reflected_image
-    keyboard.add(pixelate_btn, ascii_btn, invert_btn, reflected_btn)
+    heatmap_btn = types.InlineKeyboardButton("Convert to heatmap", callback_data="heatmap")
+    keyboard.add(pixelate_btn, ascii_btn, invert_btn, reflected_btn, heatmap_btn)
     return keyboard
 
 @bot.message_handler(content_types=['text'])
@@ -111,6 +111,10 @@ def callback_query(call):
     elif call.data == "reflected":
         bot.answer_callback_query(call.id, "Converting your image reflected...")
         reflected_image(call.message)
+    elif call.data == "heatmap":
+        bot.answer_callback_query(call.id, "Converting your image heatmap...")
+        convert_to_heatmap(call.message)
+        # convert_to_heatmap
 
 def pixelate_and_send(message):
     photo_id = user_states[message.chat.id]['photo']
@@ -154,16 +158,41 @@ def invert_colors(message):
     return inverted_image
 
 def reflected_image(message):
+    """
+    Зеркально отражает изображение, для этого сначала считывает изображение, обрабатывает его и отправляет уже
+    обработанное обратно в чат.
+    :param message:
+    :return:
+    """
     photo_id = user_states[message.chat.id]['photo']  # Обозначаем какое изображение будем обрабатывать.
     file_info = bot.get_file(photo_id)
     downloaded_file = bot.download_file(file_info.file_path)
     image_stream = io.BytesIO(downloaded_file)
-    image = Image.open(image_stream)
+    image = Image.open(image_stream).convert("L")
     reflected_image = image.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
     output_stream = io.BytesIO()   # Отправляем изображение обратно в чат
     reflected_image.save(output_stream, format="JPEG")
     output_stream.seek(0)
     bot.send_photo(message.chat.id, output_stream)
     return reflected_image
+
+def convert_to_heatmap(message):
+    """
+    Зеркально отражает изображение, для этого сначала считывает изображение, обрабатывает его и отправляет уже
+    обработанное обратно в чат.
+    :param message:
+    :return:
+    """
+    photo_id = user_states[message.chat.id]['photo']  # Обозначаем какое изображение будем обрабатывать.
+    file_info = bot.get_file(photo_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+    image_stream = io.BytesIO(downloaded_file)
+    image = Image.open(image_stream).convert("L")
+    heatmap_image = ImageOps.colorize(image, black="blue", white="white")
+    output_stream = io.BytesIO()   # Отправляем изображение обратно в чат
+    heatmap_image.save(output_stream, format="JPEG")
+    output_stream.seek(0)
+    bot.send_photo(message.chat.id, output_stream)
+    return heatmap_image
 
 bot.polling(none_stop=True)

@@ -84,8 +84,9 @@ def get_options_keyboard():
     pixelate_btn = types.InlineKeyboardButton("Pixelate", callback_data="pixelate")
     ascii_btn = types.InlineKeyboardButton("ASCII Art", callback_data="ascii")
     invert_btn = types.InlineKeyboardButton("Invert colors", callback_data="invert")
-    # print(ascii_btn)
-    keyboard.add(pixelate_btn, ascii_btn, invert_btn)
+    reflected_btn = types.InlineKeyboardButton("Reflected image", callback_data="reflected")
+    # print(ascii_btn) reflected_image
+    keyboard.add(pixelate_btn, ascii_btn, invert_btn, reflected_btn)
     return keyboard
 
 @bot.message_handler(content_types=['text'])
@@ -106,9 +107,10 @@ def callback_query(call):
         ascii_and_send(call.message)
     elif call.data == "invert":
         bot.answer_callback_query(call.id, "Converting your image invert...")
-        # print(call)
-        # photo_file = user_states[message.chat.id]
         invert_colors(call.message)
+    elif call.data == "reflected":
+        bot.answer_callback_query(call.id, "Converting your image reflected...")
+        reflected_image(call.message)
 
 def pixelate_and_send(message):
     photo_id = user_states[message.chat.id]['photo']
@@ -150,5 +152,18 @@ def invert_colors(message):
     output_stream.seek(0)
     bot.send_photo(message.chat.id, output_stream)
     return inverted_image
+
+def reflected_image(message):
+    photo_id = user_states[message.chat.id]['photo']  # Обозначаем какое изображение будем обрабатывать.
+    file_info = bot.get_file(photo_id)
+    downloaded_file = bot.download_file(file_info.file_path)
+    image_stream = io.BytesIO(downloaded_file)
+    image = Image.open(image_stream)
+    reflected_image = image.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+    output_stream = io.BytesIO()   # Отправляем изображение обратно в чат
+    reflected_image.save(output_stream, format="JPEG")
+    output_stream.seek(0)
+    bot.send_photo(message.chat.id, output_stream)
+    return reflected_image
 
 bot.polling(none_stop=True)

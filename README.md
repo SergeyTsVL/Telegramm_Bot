@@ -35,7 +35,7 @@ pixels_to_ascii(image):
 ![Uploading 1.png…](https://github.com/SergeyTsVL/Telegramm_Bot/blob/3.2/images/5.png)
 Конвертирует пиксели изображения в градациях серого в строку ASCII-символов, используя предопределенную строку ASCII_CHARS.
 ![Uploading 1.png…](https://github.com/SergeyTsVL/Telegramm_Bot/blob/3.2/images/6.png)
-![Uploading 1.png…](https://github.com/SergeyTsVL/Telegramm_Bot/blob/3.2/images/7.png)
+![Uploading 1.png…](https://github.com/SergeyTsVL/Telegramm_Bot/blob/3.5/images/7.png)
 Взаимодействие с пользователем
 Обработчики сообщений:
 

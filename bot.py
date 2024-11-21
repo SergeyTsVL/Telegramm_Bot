@@ -4,13 +4,12 @@ from PIL import Image, ImageOps
 import io
 from telebot import types
 import os
+import random
 
 # Прописываю токен в свой пайчарм
 TOKEN = os.environ.get("TOKEN")
 bot = telebot.TeleBot(TOKEN)
-
 user_states = {}  # тут будем хранить информацию о действиях пользователя
-
 # набор символов из которых составляем изображение
 ASCII_CHARS = '@%#*+=-:. '
 SIZE = None
@@ -38,7 +37,6 @@ def image_to_ascii(image_stream, new_width=40):
     img_width = img_resized.width
     max_characters = 4000 - (new_width + 1)
     max_rows = max_characters // (new_width + 1)
-
     ascii_art = ""
     for i in range(0, min(max_rows * img_width, len(img_str)), img_width):
         ascii_art += img_str[i:i + img_width] + "\n"
@@ -64,7 +62,18 @@ def pixelate_image(image, pixel_size):
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    bot.reply_to(message, "Пришлите мне изображение, и я предложу вам варианты!")
+    bot.reply_to(message, "Пришлите мне изображение, и я предложу вам варианты!",
+                 reply_markup=get_options_keyboard_0())   # добавляем кнопку для вывода шуток
+
+def get_options_keyboard_0():
+    """
+    Добавляем кнопку для вывода случайных шуток из списка файла JOKES.csv
+    :return:
+    """
+    keyboard = types.InlineKeyboardMarkup()
+    random_Joke_btn = types.InlineKeyboardButton("Random Joke", callback_data="random_Joke")
+    keyboard.add(random_Joke_btn)
+    return keyboard
 
 @bot.message_handler(content_types=['photo'])
 def handle_photo(message):
@@ -82,7 +91,8 @@ def get_options_keyboard():
     reflected_btn = types.InlineKeyboardButton("Reflected image", callback_data="reflected")
     heatmap_btn = types.InlineKeyboardButton("Convert to heatmap", callback_data="heatmap")
     size_btn = types.InlineKeyboardButton("Size", callback_data="change_size")
-    keyboard.add(pixelate_btn, ascii_btn, invert_btn, reflected_btn, heatmap_btn, size_btn)
+    random_Joke_btn = types.InlineKeyboardButton("Random Joke", callback_data="random_Joke")
+    keyboard.add(pixelate_btn, ascii_btn, invert_btn, reflected_btn, heatmap_btn, size_btn, random_Joke_btn)
     return keyboard
 
 @bot.message_handler(content_types=['text'])
@@ -102,7 +112,6 @@ def text_processing(message):
         ASCII_CHARS = CHARACTER_SET or '@%#*+=-:. '
         ascii_and_send(message)
 
-
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     if call.data == "pixelate":
@@ -120,6 +129,9 @@ def callback_query(call):
     elif call.data == "heatmap":
         bot.answer_callback_query(call.id, "Преобразование тепловой карты вашего изображения...")
         convert_to_heatmap(call.message)
+    elif call.data == "random_Joke":
+        bot.answer_callback_query(call.id, "Внимание сейчас будет сгенерирована шутка программиста...")
+        bot.send_message(call.message.chat.id, f'{random_joke(call.message.chat.id)}')
     elif call.data == "change_size":
         bot.answer_callback_query(call.id, "Преобразование размера вашего изображения...")
         # Проверяем есть ли фото в наличии
@@ -230,11 +242,9 @@ def convert_to_heatmap(message):
 
 def resize_for_sticker(image, max_size=SIZE):
     """
-    Изменение размера фото до 128
+    Изменение размера фото до указанного как SIZE.
+    Примерный ввод размера в для отправки сообщением: "размер 128"
     """
-    print(SIZE)
-    print(type(SIZE))
-    print(123)
     # Получаем текущие размеры изображения
     width, height = image.size
     # Определяем новые размеры, сохраняя пропорции
@@ -247,5 +257,19 @@ def resize_for_sticker(image, max_size=SIZE):
     # Создаем новое изображение с заданными размерами
     resized_image = image.resize((new_width, new_height), Image.LANCZOS)
     return resized_image
+
+def random_joke(message):
+    """
+    Генерируем случайные шутки из списка шуток файла формата .csv
+    :param message:
+    :return:
+    """
+    with open('JOKES.csv', 'r', encoding='utf8') as file:
+        random_number = random.randint(1, 25)
+        a = 0
+        for row in file:
+            a += 1
+            if a == random_number:
+                return row
 
 bot.polling(none_stop=True)

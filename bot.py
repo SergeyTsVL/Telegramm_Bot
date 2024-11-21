@@ -13,6 +13,7 @@ user_states = {}  # тут будем хранить информацию о д�
 
 # набор символов из которых составляем изображение
 ASCII_CHARS = '@%#*+=-:. '
+SIZE = None
 
 def resize_image(image, new_width=100):
     width, height = image.size
@@ -63,7 +64,7 @@ def pixelate_image(image, pixel_size):
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    bot.reply_to(message, "Send me an image, and I'll provide options for you!")
+    bot.reply_to(message, "Пришлите мне изображение, и я предложу вам варианты!")
 
 @bot.message_handler(content_types=['photo'])
 def handle_photo(message):
@@ -87,29 +88,40 @@ def get_options_keyboard():
 @bot.message_handler(content_types=['text'])
 def text_processing(message):
     global ASCII_CHARS
-    CHARACTER_SET = str(message.text)
-    ASCII_CHARS = CHARACTER_SET or '@%#*+=-:. '
-    ascii_and_send(message)
+    global SIZE
+    if 'размер' in message.text:
+        SIZE = str(message.text)
+        a = 0
+        for i in SIZE:
+            a += 1
+            if a < 7:
+                SIZE = SIZE.replace(SIZE[0], "")
+        SIZE = int(SIZE) or 128
+    else:
+        CHARACTER_SET = str(message.text)
+        ASCII_CHARS = CHARACTER_SET or '@%#*+=-:. '
+        ascii_and_send(message)
+
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
     if call.data == "pixelate":
-        bot.answer_callback_query(call.id, "Pixelating your image...")
+        bot.answer_callback_query(call.id, "Пикселизация вашего изображения...")
         pixelate_and_send(call.message)
     elif call.data == "ascii":
-        bot.answer_callback_query(call.id, "Converting your image to ASCII art...")
+        bot.answer_callback_query(call.id, "Преобразование вашего изображения в формат ASCII art...")
         ascii_and_send(call.message)
     elif call.data == "invert":
-        bot.answer_callback_query(call.id, "Converting your image invert...")
+        bot.answer_callback_query(call.id, "Преобразование вашего изображения в обратное...")
         invert_colors(call.message)
     elif call.data == "reflected":
-        bot.answer_callback_query(call.id, "Converting your image reflected...")
+        bot.answer_callback_query(call.id, "Преобразование вашего отраженного изображения...")
         reflected_image(call.message)
     elif call.data == "heatmap":
-        bot.answer_callback_query(call.id, "Converting your image heatmap...")
+        bot.answer_callback_query(call.id, "Преобразование тепловой карты вашего изображения...")
         convert_to_heatmap(call.message)
     elif call.data == "change_size":
-        bot.answer_callback_query(call.id, "Converting your size image...")
+        bot.answer_callback_query(call.id, "Преобразование размера вашего изображения...")
         # Проверяем есть ли фото в наличии
         if call.message.json['reply_to_message']['photo'][-1]['file_id']:  # да... структура зависит от версии пайтона
             # Получаем информацию о файле
@@ -121,7 +133,7 @@ def callback_query(call):
                 response.raise_for_status()
                 image_stream = response.content
                 image = Image.open(io.BytesIO(image_stream))
-                resized_image = resize_for_sticker(image)
+                resized_image = resize_for_sticker(image, SIZE)
                 # Сохраняем измененное изображение в поток
                 buffer = io.BytesIO()
                 resized_image.save(buffer, format='JPEG')
@@ -133,9 +145,9 @@ def callback_query(call):
                     caption="Измененное изображение"
                 )
             except Exception as e:
-                bot.answer_callback_query(call.id, f"An error occurred: {str(e)}")
+                bot.answer_callback_query(call.id, f"Произошла ошибка: {str(e)}")
         else:
-            bot.answer_callback_query(call.id, "No photo found in this message.")
+            bot.answer_callback_query(call.id, "В этом сообщении не найдено ни одной фотографии.")
 
 def pixelate_and_send(message):
     photo_id = user_states[message.chat.id]['photo']
@@ -216,10 +228,13 @@ def convert_to_heatmap(message):
     bot.send_photo(message.chat.id, output_stream)
     return heatmap_image
 
-def resize_for_sticker(image, max_size=128):
+def resize_for_sticker(image, max_size=SIZE):
     """
     Изменение размера фото до 128
     """
+    print(SIZE)
+    print(type(SIZE))
+    print(123)
     # Получаем текущие размеры изображения
     width, height = image.size
     # Определяем новые размеры, сохраняя пропорции

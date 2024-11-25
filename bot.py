@@ -62,8 +62,10 @@ def pixelate_image(image, pixel_size):
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-    bot.reply_to(message, "Пришлите мне изображение, и я предложу вам варианты!",
+    bot.reply_to(message, f"Пришлите мне изображение, и я предложу вам варианты!\n"
+                          f"Не забывай - {random_compliment(message)}",
                  reply_markup=get_options_keyboard_0())   # добавляем кнопку для вывода шуток
+    # bot.reply_to(message, random_compliment(message))
 
 def get_options_keyboard_0():
     """
@@ -117,18 +119,23 @@ def callback_query(call):
     if call.data == "pixelate":
         bot.answer_callback_query(call.id, "Пикселизация вашего изображения...")
         pixelate_and_send(call.message)
+        bot.send_message(call.message.chat.id, f'{random_compliment(call.message.chat.id)}')
     elif call.data == "ascii":
         bot.answer_callback_query(call.id, "Преобразование вашего изображения в формат ASCII art...")
         ascii_and_send(call.message)
+        bot.send_message(call.message.chat.id, f'{random_compliment(call.message.chat.id)}')
     elif call.data == "invert":
         bot.answer_callback_query(call.id, "Преобразование вашего изображения в обратное...")
         invert_colors(call.message)
+        bot.send_message(call.message.chat.id, f'{random_compliment(call.message.chat.id)}')
     elif call.data == "reflected":
         bot.answer_callback_query(call.id, "Преобразование вашего отраженного изображения...")
         reflected_image(call.message)
+        bot.send_message(call.message.chat.id, f'{random_compliment(call.message.chat.id)}')
     elif call.data == "heatmap":
         bot.answer_callback_query(call.id, "Преобразование тепловой карты вашего изображения...")
         convert_to_heatmap(call.message)
+        bot.send_message(call.message.chat.id, f'{random_compliment(call.message.chat.id)}')
     elif call.data == "random_Joke":
         bot.answer_callback_query(call.id, "Внимание сейчас будет сгенерирована шутка программиста...")
         bot.send_message(call.message.chat.id, f'{random_joke(call.message.chat.id)}')
@@ -156,6 +163,7 @@ def callback_query(call):
                     photo=buffer,
                     caption="Измененное изображение"
                 )
+                bot.send_message(call.message.chat.id, f'{random_compliment(call.message.chat.id)}')
             except Exception as e:
                 bot.answer_callback_query(call.id, f"Произошла ошибка: {str(e)}")
         else:
@@ -272,4 +280,17 @@ def random_joke(message):
             if a == random_number:
                 return row
 
+def random_compliment(message):
+    """
+    Генерируем случайные шутки из списка шуток файла формата .csv
+    :param message:
+    :return:
+    """
+    with open('COMPLIMENTS.csv', 'r', encoding='utf8') as file:
+        random_number = random.randint(1, 25)
+        a = 0
+        for row in file:
+            a += 1
+            if a == random_number:
+                return row
 bot.polling(none_stop=True)

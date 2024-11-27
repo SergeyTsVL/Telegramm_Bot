@@ -35,8 +35,11 @@ pixels_to_ascii(image):
 ![Uploading 1.png…](https://github.com/SergeyTsVL/Telegramm_Bot/blob/3.2/images/5.png)
 Конвертирует пиксели изображения в градациях серого в строку ASCII-символов, используя предопределенную строку ASCII_CHARS.
 ![Uploading 1.png…](https://github.com/SergeyTsVL/Telegramm_Bot/blob/3.2/images/6.png)
+При получении соответствующей команды (Random Joke) бот выбирает случайную шутку из списка JOKES и отправляет ее пользователю.
 ![Uploading 1.png…](https://github.com/SergeyTsVL/Telegramm_Bot/blob/3.5/images/7.png)
+Отправляет пользователю случайный комплимент из предопределенного списка.
 ![Uploading 1.png…](https://github.com/SergeyTsVL/Telegramm_Bot/blob/3.8/images/8.png)
+Симулирует подбрасывание монетки, сообщая пользователю результат ("Орел" или "Решка").
 ![Uploading 1.png…](https://github.com/SergeyTsVL/Telegramm_Bot/blob/3.8/images/9.png)
 Взаимодействие с пользователем
 Обработчики сообщений:

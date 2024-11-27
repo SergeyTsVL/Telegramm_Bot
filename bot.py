@@ -143,14 +143,7 @@ def callback_query(call):
 
     elif call.data == "Flip a Coin":
         bot.answer_callback_query(call.id, "Подбрасываем монету, случайность определит 'орел' или 'решко'")
-        # gif_file = BytesIO(open('twirling_a_coin.gif', 'rb').read())
-        # # Отправляем сообщение с GIF
-        # bot.send_photo(
-        #     chat_id=call.message.chat.id,
-        #     photo=gif_file,
-        #     caption="Выпадает орел или решка?",
-        # )
-        photo = open("twirling_a_coin.gif", 'rb')
+        photo = open("twirling_a_coin.gif", 'rb')  # Вставляем анимацию подброшенной монетки
         bot.send_animation(call.message.chat.id, photo)
         bot.send_message(call.message.chat.id, f'У вас выпало\n{random.choice(["ОРЕЛ", "РЕШКА"])}')
         bot.send_message(call.message.chat.id, f'{random_joke(call.message.chat.id)}')

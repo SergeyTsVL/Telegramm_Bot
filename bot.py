@@ -140,14 +140,12 @@ def callback_query(call):
     elif call.data == "random_Joke":
         bot.answer_callback_query(call.id, "Внимание сейчас будет сгенерирована шутка программиста...")
         bot.send_message(call.message.chat.id, f'{random_joke(call.message.chat.id)}')
-
     elif call.data == "Flip a Coin":
         bot.answer_callback_query(call.id, "Подбрасываем монету, случайность определит 'орел' или 'решко'")
         photo = open("twirling_a_coin.gif", 'rb')  # Вставляем анимацию подброшенной монетки
         bot.send_animation(call.message.chat.id, photo)
         bot.send_message(call.message.chat.id, f'У вас выпало\n{random.choice(["ОРЕЛ", "РЕШКА"])}')
         bot.send_message(call.message.chat.id, f'{random_joke(call.message.chat.id)}')
-
     elif call.data == "change_size":
         bot.answer_callback_query(call.id, "Преобразование размера вашего изображения...")
         # Проверяем есть ли фото в наличии

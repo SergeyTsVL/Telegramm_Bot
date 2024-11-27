@@ -1,10 +1,11 @@
-import requests
 import telebot
 from PIL import Image, ImageOps
 import io
 from telebot import types
 import os
 import random
+import requests
+from io import BytesIO
 
 # Прописываю токен в свой пайчарм
 TOKEN = os.environ.get("TOKEN")
@@ -65,7 +66,6 @@ def send_welcome(message):
     bot.reply_to(message, f"Пришлите мне изображение, и я предложу вам варианты!\n"
                           f"Не забывай - {random_compliment(message)}",
                  reply_markup=get_options_keyboard_0())   # добавляем кнопку для вывода шуток
-    # bot.reply_to(message, random_compliment(message))
 
 def get_options_keyboard_0():
     """
@@ -74,7 +74,8 @@ def get_options_keyboard_0():
     """
     keyboard = types.InlineKeyboardMarkup()
     random_Joke_btn = types.InlineKeyboardButton("Random Joke", callback_data="random_Joke")
-    keyboard.add(random_Joke_btn)
+    coin_btn = types.InlineKeyboardButton("Coin", callback_data="Flip a Coin")
+    keyboard.add(random_Joke_btn, coin_btn)
     return keyboard
 
 @bot.message_handler(content_types=['photo'])
@@ -139,6 +140,21 @@ def callback_query(call):
     elif call.data == "random_Joke":
         bot.answer_callback_query(call.id, "Внимание сейчас будет сгенерирована шутка программиста...")
         bot.send_message(call.message.chat.id, f'{random_joke(call.message.chat.id)}')
+
+    elif call.data == "Flip a Coin":
+        bot.answer_callback_query(call.id, "Подбрасываем монету, случайность определит 'орел' или 'решко'")
+        # gif_file = BytesIO(open('twirling_a_coin.gif', 'rb').read())
+        # # Отправляем сообщение с GIF
+        # bot.send_photo(
+        #     chat_id=call.message.chat.id,
+        #     photo=gif_file,
+        #     caption="Выпадает орел или решка?",
+        # )
+        photo = open("twirling_a_coin.gif", 'rb')
+        bot.send_animation(call.message.chat.id, photo)
+        bot.send_message(call.message.chat.id, f'У вас выпало\n{random.choice(["ОРЕЛ", "РЕШКА"])}')
+        bot.send_message(call.message.chat.id, f'{random_joke(call.message.chat.id)}')
+
     elif call.data == "change_size":
         bot.answer_callback_query(call.id, "Преобразование размера вашего изображения...")
         # Проверяем есть ли фото в наличии

@@ -62,26 +62,51 @@ def callback_query(call):
 
     for table in table_names:
         if call.data == table:
-            print(call.data)
-            # get_all_users(table)
-            users = get_all_users(table)
-            print(users)
-            if users:
-                response = "Список пользователей:\n"
-                for user in users:
-                    response += f"ID: {user[0]}, Name: {user[1]}"
-            else:
-                response = "Пользователи не найдены."
+            if table != 'sqlite_sequence':
+                print(call.data)
+                # get_all_users(table)
+                users = get_all_users(table, call.message)
+                print(users)
+                if users:
+                    keyboard = types.InlineKeyboardMarkup()  # Создаем клавиатуру один раз
+                    for row in users:
+                        print(row)
+                        button = types.InlineKeyboardButton(text='Редактирование',
+                                                            callback_data=row[2])  # Создаем кнопку для каждой таблицы
+                        if row[4] == 'не_выполнено':
+                            button1 = types.InlineKeyboardButton(text='Выполнено',
+                                                                callback_data=row[3])  # Создаем кнопку для каждой таблицы
+                            keyboard.add(button, button1)  # Добавляем кнопку в клавиатуру
+                        else:
+                            keyboard.add(button)
+                    bot.send_message(call.message.chat.id, f"Задание: {row[2]}, дедлайн {row[3]},\n статус '{row[4]}'",
+                                     reply_markup=keyboard)
+                    return keyboard
+                        # response += f"ID: {row[0]}, Name: {row[1]}"
+                else:
+                    keyboard = types.InlineKeyboardMarkup()  # Создаем клавиатуру один раз
 
-            bot.reply_to(call.message, response)
+                    button = types.InlineKeyboardButton(text='Добавить задание',
+                                                        callback_data='123')  # Создаем кнопку для каждой таблицы
 
-def get_all_users(table):
+                    keyboard.add(button)  # Добавляем кнопку в клавиатуру
+                    bot.send_message(call.message.chat.id, f"Категория '{table}' не имеет заданий ",
+                                     reply_markup=keyboard)
+
+            # bot.reply_to(call.message, response)
+
+def get_all_users(table, message):
     conn = sqlite3.connect('example.db')
     c = conn.cursor()
-    c.execute(f"SELECT * FROM {table}")
-    rows = c.fetchall()
+    try:
+        c.execute(f"SELECT * FROM {table}")
+        rows = c.fetchall()
+        return rows
+    except:
+        None
+        # bot.reply_to(message, text='55555555')
     conn.close()
-    return rows
+    # return rows
 
 
 
@@ -157,6 +182,5 @@ def print_table_names():
     return [table[0] for table in tables]
 
 
+bot.polling()
 
-
-bot.polling(none_stop=True)

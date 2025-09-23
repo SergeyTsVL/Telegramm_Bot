@@ -1,3 +1,4 @@
+import json
 import sqlite3
 
 import telebot
@@ -14,6 +15,19 @@ TOKEN = os.environ.get("TOKEN")
 bot = telebot.TeleBot(TOKEN)
 
 table_names_list = []
+messages_list = []
+
+
+# Состояния
+WAITING_FOR_CATEGORY = 'waiting_for_category'
+WAITING_FOR_row = 'waiting_for_row'
+
+# Хранение состояний пользователей
+user_states = {}
+user_states_row = {}
+
+list_table = []
+
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
@@ -31,21 +45,19 @@ def get_options_keyboard_0():
     keyboard.add(create_category, list_business, all_category)
     return keyboard
 
-# Состояния
-WAITING_FOR_CATEGORY = 'waiting_for_category'
-
-# Хранение состояний пользователей
-user_states = {}
 
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_query(call):
+    global list_table
     if call.data == "create_category":
         bot.send_message(call.message.chat.id, 'Введи название новой категории')
         user_states[call.message.chat.id] = WAITING_FOR_CATEGORY
+        list_table = []
     table_names = print_table_names()
 
     if call.data == "All_categories":
+        list_table = []
 
         table_names = print_table_names()
         if not table_names:
@@ -63,14 +75,14 @@ def callback_query(call):
     for table in table_names:
         if call.data == table:
             if table != 'sqlite_sequence':
-                print(call.data)
+                # print(call.data)
                 # get_all_users(table)
                 users = get_all_users(table, call.message)
-                print(users)
+                # print(users)
                 if users:
                     keyboard = types.InlineKeyboardMarkup()  # Создаем клавиатуру один раз
                     for row in users:
-                        print(row)
+                        # print(row)
                         button = types.InlineKeyboardButton(text='Редактирование',
                                                             callback_data=row[2])  # Создаем кнопку для каждой таблицы
                         if row[4] == 'не_выполнено':
@@ -79,7 +91,7 @@ def callback_query(call):
                             keyboard.add(button, button1)  # Добавляем кнопку в клавиатуру
                         else:
                             keyboard.add(button)
-                    bot.send_message(call.message.chat.id, f"Задание: {row[2]}, дедлайн {row[3]},\n статус '{row[4]}'",
+                    bot.send_message(call.message.chat.id, f"Задание: {row[2]},\nдедлайн {row[3]},\nстатус '{row[4]}'",
                                      reply_markup=keyboard)
                     return keyboard
                         # response += f"ID: {row[0]}, Name: {row[1]}"
@@ -87,13 +99,19 @@ def callback_query(call):
                     keyboard = types.InlineKeyboardMarkup()  # Создаем клавиатуру один раз
 
                     button = types.InlineKeyboardButton(text='Добавить задание',
-                                                        callback_data='123')  # Создаем кнопку для каждой таблицы
+                                                        callback_data='Добавить задание')  # Создаем кнопку для каждой таблицы
 
                     keyboard.add(button)  # Добавляем кнопку в клавиатуру
+                    list_table.append(table)
                     bot.send_message(call.message.chat.id, f"Категория '{table}' не имеет заданий ",
                                      reply_markup=keyboard)
 
-            # bot.reply_to(call.message, response)
+
+    if call.data == "Добавить задание":
+        bot.send_message(call.message.chat.id, 'Введи название новой строки "business"///"created_at"\n'
+                                               'через ///\nПример: Разработать микросервис на FastAPI///20.10.25')
+        user_states_row[call.message.chat.id] = WAITING_FOR_row
+
 
 def get_all_users(table, message):
     conn = sqlite3.connect('example.db')
@@ -122,24 +140,6 @@ def process_table(table_name, call):
     # Здесь вы можете выполнить нужные действия с таблицей
     bot.send_message(call.message.chat.id, f'Вы выбрали таблицу: {table_name}')
 
-
-
-
-# def fff():
-#     table_names = print_table_names()
-#     print(table_names)
-#     keyboard = types.InlineKeyboardMarkup()  # Создаем клавиатуру один раз
-#     for table in table_names:
-#         button = types.InlineKeyboardButton(text=table, callback_data=table)  # Создаем кнопку для каждой таблицы
-#         keyboard.add(button)  # Добавляем кнопку в клавиатуру
-#     return keyboard
-
-            # markup.add(table)
-
-        # bot.send_message(call.message.chat.id, "Выберите таблицу:", reply_markup=markup)
-
-
-
 @bot.message_handler(
     func=lambda message: message.chat.id in user_states and user_states[message.chat.id] == WAITING_FOR_CATEGORY)
 def handle_new_category(message):
@@ -150,12 +150,58 @@ def handle_new_category(message):
     del user_states[message.chat.id]
     f_create_category(category_name)
 
-    # return category_name
+@bot.message_handler(
+    func=lambda message: message.chat.id in user_states_row and user_states_row[message.chat.id] == WAITING_FOR_row)
+def handle_new_row(message):
+    print(message)
+    row_name = message.text
+    list_row = message.text.split('///')
+
+    # Здесь вы можете сохранить категорию в базе данных или выполнить другие действия
+    bot.send_message(message.chat.id, f'Запись в колонке business-> "{list_row[0]}" и created_at-> "{list_row[1]}" '
+                                      f'успешно создана!')
+    # Удаляем состояние пользователя
+    create_business(message)
+    del user_states_row[message.chat.id]
+
+def create_business(message):
+    # bot.send_message(message.chat.id, 'Можно прописывать задание на добавление данных в строку')
+    # print(message['from_user'])
+    # message = json.loads(message)
+    print(message.from_user.username)
+    print(message.from_user.id)
+    list_row = message.text.split('///')
+    # print(list_row)
+
+
+
+
+    conn = sqlite3.connect('example.db')
+    c = conn.cursor()
+    c.execute(f'''
+    INSERT INTO [{list_table[0]}] (id, username, business, created_at)
+    VALUES (?, ?, ?, ?)
+    ''', (message.from_user.id, message.from_user.username, list_row[0], list_row[1]))
+    # Сохраняем изменения в базе данных
+    conn.commit()
+
+    # 'json': {'message_id': 1737, 'from': {'id': 1105682217, 'is_bot': False, 'first_name': 'Сергей ࣩࣩ ࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩ ࣩࣩ ࣩࣩ ࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩ',
+    # 'username': 'jaga_jagaga', 'language_code': 'ru'}, 'chat': {'id': 1105682217, 'first_name': 'Сергей ࣩࣩ ࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩ ࣩࣩ ࣩࣩ ࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩ',
+    # 'username': 'jaga_jagaga', 'type': 'private'}, 'date': 1758649931, 'text': 'Разработать микросервис на FastAPI///20.10.25'}}
+
+
+
+
+
+
+
+
 
 
 @bot.message_handler(func=lambda message: True)
 def echo_message(message):
     bot.reply_to(message, f"Вы написали: {message.text}")
+    return message.text
 
 def f_create_category(message):
     conn = sqlite3.connect('example.db')
@@ -169,6 +215,7 @@ def f_create_category(message):
             data TEXT DEFAULT не_выполнено
         )
     ''')
+
     # Сохраняем изменения в базе данных
     conn.commit()
 

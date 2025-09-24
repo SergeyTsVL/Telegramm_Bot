@@ -38,6 +38,8 @@ int_call_data = []
 def send_welcome(message):
     bot.reply_to(message, f"Посмотрите актуальный список задач ",
                  reply_markup=get_options_keyboard_0())   # добавляем кнопки для вывода и ввода данных
+
+
 def get_options_keyboard_0():
     """
     Добавляем кнопку для вывода случайных шуток из списка файла JOKES.csv
@@ -45,9 +47,8 @@ def get_options_keyboard_0():
     """
     keyboard = types.InlineKeyboardMarkup()
     create_category= types.InlineKeyboardButton("Создать категорию", callback_data="create_category")
-    list_business = types.InlineKeyboardButton("Список дел", callback_data="To-do_list")
     all_category = types.InlineKeyboardButton("Все категории", callback_data="All_categories")
-    keyboard.add(create_category, list_business, all_category)
+    keyboard.add(create_category, all_category)
     return keyboard
 
 
@@ -143,7 +144,7 @@ def callback_query(call):
         if int(call.data) in range(0, 100000000000, 1):
             # print(call.data, 'call.data')
             done_row(call.data)
-            bot.send_message(call.message.chat.id, f'После нажатия кнопки перезапустите отправив сообщение старт /start ')
+            # bot.send_message(call.message.chat.id, f'После нажатия кнопки перезапустите отправив сообщение старт /start ')
     except:
         None
 
@@ -152,7 +153,7 @@ def callback_query(call):
             int_call_data.append(call.data[2:])
             start_message(call.message)
 
-            bot.send_message(call.message.chat.id, f'После нажатия кнопки перезапустите отправив сообщение старт /start ')
+            # bot.send_message(call.message.chat.id, f'После нажатия кнопки перезапустите отправив сообщение старт /start ')
     except:
         None
 
@@ -219,11 +220,10 @@ def get_second_word(message):
 def done_row(int_call):
     print(list_table[0])
     print(int_call)
-    l = 'Выполнено'
     conn = sqlite3.connect('example.db')
     c = conn.cursor()
     c.execute(f'''UPDATE [{list_table[0]}] SET data = ? WHERE id = ?''',
-              (f'"{l}"', int(int_call)))
+              ('Выполнено', int(int_call)))
     # Сохраняем изменения в базе данных
     conn.commit()
 
@@ -305,7 +305,7 @@ def create_business(message):
     ''', (message.from_user.username, list_row[0], list_row[1]))
     # Сохраняем изменения в базе данных
     conn.commit()
-    bot.send_message(message.chat.id, f'После нажатия кнопки перезапустите отправив сообщение старт /start ')
+    # bot.send_message(message.chat.id, f'После нажатия кнопки перезапустите отправив сообщение старт /start ')
 
 @bot.message_handler(func=lambda message: True)
 def echo_message(message):

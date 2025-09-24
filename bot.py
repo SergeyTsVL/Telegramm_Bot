@@ -28,6 +28,11 @@ user_states_row = {}
 
 list_table = []
 
+# Список для хранения слов
+words_list = []
+
+int_call_data = []
+
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
@@ -54,12 +59,11 @@ def callback_query(call):
         bot.send_message(call.message.chat.id, 'Введи название новой категории')
         user_states[call.message.chat.id] = WAITING_FOR_CATEGORY
         list_table = []
+
     table_names = print_table_names()
 
     if call.data == "All_categories":
         list_table = []
-
-        # table_names = print_table_names()
         if not table_names:
             bot.send_message(call.message.chat.id, "Нет таблиц в базе данных.")
             return
@@ -70,10 +74,11 @@ def callback_query(call):
                 button123 = types.InlineKeyboardButton(text=table, callback_data=table)  # Создаем кнопку для каждой таблицы
                 keyboard14.add(button123)  # Добавляем кнопку в клавиатуру
         bot.send_message(call.message.chat.id, "Выберите категорию:", reply_markup=keyboard14)
+        # print(call.message)
         return keyboard14
 
     for table in table_names:
-        print(table)
+        # print(table)
 
         if call.data == table:
             if table != 'sqlite_sequence':
@@ -90,21 +95,17 @@ def callback_query(call):
                                  reply_markup=keyboard1)
                 if users:
                     keyboard = types.InlineKeyboardMarkup()  # Создаем клавиатуру один раз
-                    # button = types.InlineKeyboardButton(text='Редактирование',
-                    #                                     callback_data='row[2]')  # Создаем кнопку для каждой таблицы
-                    # button1 = types.InlineKeyboardButton(text='Выполнено',
-                    #                                     callback_data='row[0]')  # Создаем кнопку для каждой таблицы
-                    # keyboard.add(button, button1)  # Добавляем кнопку в клавиатуру
                     d = []
                     for row in users:
-
+                        # print(row[0])
+                        # print(row)
                         if 'button' not in d and 'button1' not in d:
                             # keyboard = types.InlineKeyboardMarkup()  # Создаем клавиатуру один раз
                             button = types.InlineKeyboardButton(text='Редактирование',
-                                                                callback_data=row[0])  # Создаем кнопку для каждой таблицы
+                                                                callback_data=f'++{row[0]}')  # Создаем кнопку для каждой таблицы
                             d.append('button')
                             button1 = types.InlineKeyboardButton(text='Выполнено',
-                                                                 callback_data=row[0])  # Создаем кнопку для каждой таблицы
+                                                                 callback_data=f'{row[0]}')  # Создаем кнопку для каждой таблицы
                             d.append('button1')
                             keyboard.add(button, button1)  # Добавляем кнопку в клавиатуру
                         # d += 1
@@ -115,7 +116,8 @@ def callback_query(call):
                             # except:
                             #     None
                         else:
-                            # keyboard.add(button)
+                            bot.send_message(call.message.chat.id,
+                                             f"Категория '{list_table[0]}',\nЗадание: {row[2]},\nДедлайн {row[3]},\nСтатус '{row[4]}'")
                             None
 
                     return keyboard
@@ -128,6 +130,7 @@ def callback_query(call):
                     #
                     # keyboard.add(button)  # Добавляем кнопку в клавиатуру
                     list_table.append(table)
+    # bot.send_message(call.message.chat.id, f'После нажатия кнопки перезапустите отправив сообщение старт /start ')
 
 
 
@@ -136,16 +139,75 @@ def callback_query(call):
                                                'через ///\nПример: Разработать микросервис на FastAPI///20.10.25')
         user_states_row[call.message.chat.id] = WAITING_FOR_row
 
-    if call.data == "row[0]":
-        # update_row(call.data)
-        print(111111)
-    # try:
-    #     if int(call.data) in range(0, 300, 1):
-    #         print(call.data, 'call.data')
-    #         update_row(call.data)
-    #         print(555555)
-    # except:
-    #     None
+    try:
+        if int(call.data) in range(0, 100000000000, 1):
+            # print(call.data, 'call.data')
+            done_row(call.data)
+            bot.send_message(call.message.chat.id, f'После нажатия кнопки перезапустите отправив сообщение старт /start ')
+    except:
+        None
+
+    try:
+        if int(call.data[2:]) in range(0, 100000000000, 1) and call.data[:2] == '++':
+            int_call_data.append(call.data[2:])
+            start_message(call.message)
+
+            bot.send_message(call.message.chat.id, f'После нажатия кнопки перезапустите отправив сообщение старт /start ')
+    except:
+        None
+
+# def update_row(int_call_data, call_message):
+    # # bot.send_message(call_message.chat.id, "Введите первое слово business:")
+    # # bot.register_next_step_handler(call_message, get_first_word)
+    # #
+    # # first_word = call_message.text
+    # # words_list.append(first_word)
+    # # bot.send_message(call_message.chat.id, "Введите второе слово:")
+    # # bot.register_next_step_handler(call_message, get_second_word)
+    # start_message()
+    #
+    # global list_table, words_list
+    # print(list_table[0])
+    # print(words_list[0])
+    # print(words_list[1])
+    # conn = sqlite3.connect('example.db')
+    # c = conn.cursor()
+    # c.execute(f'''UPDATE [{list_table[0]}] SET business = ? created_at = ? WHERE id = ?''',
+    #           (words_list[0], words_list[1], int(int_call_data)))
+    # # Сохраняем изменения в базе данных
+    # conn.commit()
+#
+def start_message(message):
+    bot.send_message(message.chat.id, "Введите первое слово:")
+    bot.register_next_step_handler(message, get_first_word)
+
+def get_first_word(message):
+    first_word = message.text
+    words_list.append(first_word)
+    bot.send_message(message.chat.id, "Введите описание задания:")
+    bot.register_next_step_handler(message, get_second_word)
+#
+def get_second_word(message):
+    second_word = message.text
+    words_list.append(second_word)
+    bot.send_message(message.chat.id, f"Введите дату выполнения задания: {words_list}")
+    try:
+        conn = sqlite3.connect('example.db')
+        c = conn.cursor()
+        global int_call_data
+        x = str(words_list[0])
+        y = str(words_list[1])
+        z = int(int_call_data[0])
+        c.execute(f'''UPDATE [{list_table[0]}] SET business = ?, created_at = ? WHERE id = ?''', (x, y, z))
+        # Сохраняем изменения в базе данных
+        conn.commit()
+    except:
+        None
+    finally:
+        conn.close()
+
+    # global int_call_data
+    int_call_data = []
 
 
 
@@ -153,33 +215,36 @@ def callback_query(call):
 
 
 
-def update_row(int_call):
-    # print(message, 'message')
-    print(1111)
+
+def done_row(int_call):
+    print(list_table[0])
+    print(int_call)
+    l = 'Выполнено'
     conn = sqlite3.connect('example.db')
-    print(2222)
     c = conn.cursor()
-    print(33333)
-    print(list_table)
     c.execute(f'''UPDATE [{list_table[0]}] SET data = ? WHERE id = ?''',
-              ('Выполнено', int(int_call)))
-    print(int_call, 4444444)
+              (f'"{l}"', int(int_call)))
     # Сохраняем изменения в базе данных
     conn.commit()
+
+
+
+
 
 
 def get_all_users(table, message):
     conn = sqlite3.connect('example.db')
     c = conn.cursor()
     try:
-        c.execute(f"SELECT * FROM {table}")
+        c.execute(f"SELECT id, username, business, created_at, data FROM {table}")
         rows = c.fetchall()
+        # print(rows)
         return rows
     except:
         None
         # bot.reply_to(message, text='55555555')
     conn.close()
-    # return rows
+
 
 
 
@@ -187,7 +252,7 @@ def get_all_users(table, message):
 def handle_query(call):
     # Получаем имя таблицы из callback_data
     table_name = call.data
-    print(table_name)
+    # print(table_name)
     # Здесь вы можете вызвать нужную функцию, передав имя таблицы
     process_table(table_name, call)
 
@@ -223,8 +288,8 @@ def create_business(message):
     # bot.send_message(message.chat.id, 'Можно прописывать задание на добавление данных в строку')
     # print(message['from_user'])
     # message = json.loads(message)
-    print(message.from_user.username)
-    print(message.from_user.id)
+    # print(message.from_user.username)
+    # print(message.from_user.id)
     list_row = message.text.split('///')
     # print(list_row)
 
@@ -233,25 +298,14 @@ def create_business(message):
 
     conn = sqlite3.connect('example.db')
     c = conn.cursor()
+
     c.execute(f'''
-    INSERT INTO [{list_table[0]}] (id, username, business, created_at)
-    VALUES (?, ?, ?, ?)
-    ''', (message.from_user.id + 1, message.from_user.username, list_row[0], list_row[1]))
+    INSERT INTO [{list_table[0]}] (username, business, created_at)
+    VALUES (?, ?, ?)
+    ''', (message.from_user.username, list_row[0], list_row[1]))
     # Сохраняем изменения в базе данных
     conn.commit()
-
-    # 'json': {'message_id': 1737, 'from': {'id': 1105682217, 'is_bot': False, 'first_name': 'Сергей ࣩࣩ ࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩ ࣩࣩ ࣩࣩ ࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩ',
-    # 'username': 'jaga_jagaga', 'language_code': 'ru'}, 'chat': {'id': 1105682217, 'first_name': 'Сергей ࣩࣩ ࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩ ࣩࣩ ࣩࣩ ࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩࣩ',
-    # 'username': 'jaga_jagaga', 'type': 'private'}, 'date': 1758649931, 'text': 'Разработать микросервис на FastAPI///20.10.25'}}
-
-
-
-
-
-
-
-
-
+    bot.send_message(message.chat.id, f'После нажатия кнопки перезапустите отправив сообщение старт /start ')
 
 @bot.message_handler(func=lambda message: True)
 def echo_message(message):
@@ -266,8 +320,8 @@ def f_create_category(message):
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT,          
             business TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            data TEXT DEFAULT не_выполнено
+            created_at TEXT,
+            data TEXT DEFAULT 'не_выполнено'
         )
     ''')
 

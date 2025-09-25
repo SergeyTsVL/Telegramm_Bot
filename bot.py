@@ -97,28 +97,40 @@ def callback_query(call):
                 if users:
                     keyboard = types.InlineKeyboardMarkup()  # Создаем клавиатуру один раз
                     d = []
+                    dd = []
+                    aa = 0
                     for row in users:
-                        # print(row[0])
+                        # aa += 1
                         # print(row)
-                        if 'button' not in d and 'button1' not in d:
+                        # if 'button' not in d and 'button1' not in d:
+                        if row[0] not in d:
+                            d.append(row[0])
+                            print(row[0], " if 'button' not in d and 'button1' not in d:")
                             # keyboard = types.InlineKeyboardMarkup()  # Создаем клавиатуру один раз
                             button = types.InlineKeyboardButton(text='Редактирование',
                                                                 callback_data=f'++{row[0]}')  # Создаем кнопку для каждой таблицы
-                            d.append('button')
+
                             button1 = types.InlineKeyboardButton(text='Выполнено',
                                                                  callback_data=f'{row[0]}')  # Создаем кнопку для каждой таблицы
-                            d.append('button1')
+
+                        # if 'button' not in dd and 'button1' not in dd:
+                        #     dd.append('button')
+                        #     dd.append('button1')
+                        #     dd.append(keyboard.add(button, button1))
                             keyboard.add(button, button1)  # Добавляем кнопку в клавиатуру
+                            print(keyboard)
+
                         # d += 1
                         if row[4] == 'не_выполнено':
                             # try:
                             bot.send_message(call.message.chat.id, f"Категория '{list_table[0]}',\nЗадание: {row[2]},\nДедлайн {row[3]},\nСтатус '{row[4]}'",
                                              reply_markup=keyboard)
-                            # except:
+                            aa += 1
                             #     None
                         else:
                             bot.send_message(call.message.chat.id,
                                              f"Категория '{list_table[0]}',\nЗадание: {row[2]},\nДедлайн {row[3]},\nСтатус '{row[4]}'")
+                            # d = []
                             None
 
                     return keyboard

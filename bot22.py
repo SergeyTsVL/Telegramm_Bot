@@ -95,16 +95,22 @@ def callback_query(call):
                 bot.send_message(call.message.chat.id, f"Категория '{table}' не имеет заданий ",
                                  reply_markup=keyboard1)
                 if users:
-                    keyboard = types.InlineKeyboardMarkup()  # Создаем клавиатуру один раз
-                    d = []
+                    # keyboard = types.InlineKeyboardMarkup()  # Создаем клавиатуру один раз
+                    my_list = []
                     dd = []
                     aa = 0
                     for row in users:
+                        keyboard = types.InlineKeyboardMarkup()  # Создаем клавиатуру один раз
                         # aa += 1
                         # print(row)
                         # if 'button' not in d and 'button1' not in d:
-                        if row[0] not in d:
-                            d.append(row[0])
+                        if row[0] not in my_list:
+                            my_list.append(row[0])
+                            # Сохраняем последний элемент
+                            last_element = my_list[-1]
+                            # Очищаем список и добавляем только последний элемент
+                            my_list = [last_element]
+                            print(my_list)
                             print(row[0], " if 'button' not in d and 'button1' not in d:")
                             # keyboard = types.InlineKeyboardMarkup()  # Создаем клавиатуру один раз
                             button = types.InlineKeyboardButton(text='Редактирование',
@@ -117,12 +123,35 @@ def callback_query(call):
                         #     dd.append('button')
                         #     dd.append('button1')
                         #     dd.append(keyboard.add(button, button1))
+
                             keyboard.add(button, button1)  # Добавляем кнопку в клавиатуру
+                            print(type(keyboard.keyboard[-1]))
                             print(keyboard)
+                            # if len(keyboard.keyboard[-1]) < 2:
+                            #     keyboard.add(button, button1)  # Добавляем кнопку в клавиатуру
+                            #     keyboard1 = keyboard
+                            #     print(type(keyboard.keyboard[-1]))
+                            #     print(keyboard)
+
+
+
+
+                            # print(type(keyboard))
+                            # print(type(keyboard.keyboard[-1]))
+                            # new_dict = {'row_width': keyboard.row_width}
+                            # new_dict1 = {'keyboard': keyboard.keyboard[-1]}
+                            # # print(new_dict)
+                            #
+                            # # print(keyboard.keyboard[-1])
+                            # keyboard1 = new_dict | new_dict1
+                            # print(type(keyboard1))
+                            # # print(keyboard1)
+                            # # keyboard = keyboard.add(new_dict, keyboard.keyboard[-1])
 
                         # d += 1
                         if row[4] == 'не_выполнено':
                             # try:
+                            # keyboard['keyboard']
                             bot.send_message(call.message.chat.id, f"Категория '{list_table[0]}',\nЗадание: {row[2]},\nДедлайн {row[3]},\nСтатус '{row[4]}'",
                                              reply_markup=keyboard)
                             aa += 1
@@ -205,7 +234,7 @@ def get_second_word(message):
     words_list.append(second_word)
     bot.send_message(message.chat.id, f"Введите дату выполнения задания: {words_list}")
     try:
-        conn = sqlite3.connect('example.db')
+        conn = sqlite3.connect('../../Desktop/example.db')
         c = conn.cursor()
         global int_call_data
         x = str(words_list[0])
@@ -232,7 +261,7 @@ def get_second_word(message):
 def done_row(int_call):
     print(list_table[0])
     print(int_call)
-    conn = sqlite3.connect('example.db')
+    conn = sqlite3.connect('../../Desktop/example.db')
     c = conn.cursor()
     c.execute(f'''UPDATE [{list_table[0]}] SET data = ? WHERE id = ?''',
               ('Выполнено', int(int_call)))
@@ -245,7 +274,7 @@ def done_row(int_call):
 
 
 def get_all_users(table, message):
-    conn = sqlite3.connect('example.db')
+    conn = sqlite3.connect('../../Desktop/example.db')
     c = conn.cursor()
     try:
         c.execute(f"SELECT id, username, business, created_at, data FROM {table}")
@@ -325,7 +354,7 @@ def echo_message(message):
     return message.text
 
 def f_create_category(message):
-    conn = sqlite3.connect('example.db')
+    conn = sqlite3.connect('../../Desktop/example.db')
     c = conn.cursor()
     c.execute(f'''
         CREATE TABLE IF NOT EXISTS [{message}] (
@@ -341,7 +370,7 @@ def f_create_category(message):
     conn.commit()
 
 def print_table_names():
-    conn = sqlite3.connect('example.db')
+    conn = sqlite3.connect('../../Desktop/example.db')
     c = conn.cursor()
     c.execute(f'''SELECT name FROM sqlite_master WHERE type='table'; ''')
     tables = c.fetchall()
